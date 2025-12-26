@@ -1,5 +1,9 @@
 {
-  "nomor": ["6283185222458", "6282353377184"],
+  "nomor": [
+    "6283185222458",
+    "6282353377184",
+    "6285738362482"
+  ],
   "pengguna": [],
   "tanggal_buat": "2024-01-01",
   "catatan": "Database security untuk Shota Bot"
