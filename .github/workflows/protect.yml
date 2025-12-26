@@ -1,28 +1,23 @@
-name: 🔒 Simple Protection
+name: 🔒 Protect Bot Files
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'database.json'
-      - 'index.js'
-      - 'scurity.js'
-      - 'handler.js'
-      - 'settings.js'
+    # HAPUS "paths:" atau biarkan kosong untuk semua file
+    # paths: []  ← HAPUS INI atau COMMENT
 
 jobs:
-  verify:
+  check:
     runs-on: ubuntu-latest
     steps:
-      - name: Check User
+      - name: 🔐 Simple Check
         run: |
-          echo "=== SIMPLE PROTECTION ==="
           echo "User: ${{ github.actor }}"
           
           # HANYA RIMMN YANG BOLEH
           if [ "${{ github.actor }}" != "Rimmn" ]; then
-            echo "❌ ERROR: Not Rimmn!"
+            echo "❌ ERROR: Only Rimmn can modify files!"
             exit 1
           fi
           
-          echo "✅ OK: User is Rimmn"
+          echo "✅ OK: Rimmn is authorized"
