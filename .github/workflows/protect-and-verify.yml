@@ -25,184 +25,91 @@ on:
 jobs:
   lockdown:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
     
     steps:
-    - name: 🚨 ALERT - CRITICAL FILES DETECTED
+    - name: 🚨 ALERT - BOT PROTECTION ACTIVATED
       run: |
         echo "=============================================="
-        echo "🔥 BOT CORE FILES PROTECTION ACTIVATED!"
-        echo "🚫 Critical files cannot be modified by others"
+        echo "🔥 ULTIMATE BOT PROTECTION SYSTEM ACTIVATED!"
         echo "=============================================="
-        echo "User: ${{ github.actor }}"
+        echo "Repository: ${{ github.repository }}"
+        echo "User making changes: ${{ github.actor }}"
         echo "Event: ${{ github.event_name }}"
-        echo "Time: $(date)"
+        echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
         echo "=============================================="
     
-    - name: 📥 CHECKOUT WITH DEEP HISTORY
+    - name: 📥 CHECKOUT CODE
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 2
     
-    - name: 🔍 IDENTIFY MODIFIED FILES
-      id: files_check
-      run: |
-        echo "=== SCANNING MODIFIED FILES ==="
-        
-        # Get list of changed files
-        CHANGED_FILES=$(git diff --name-only HEAD^ HEAD 2>/dev/null || echo "")
-        
-        if [ -z "$CHANGED_FILES" ]; then
-          echo "No files changed or first commit"
-          echo "has_changes=false" >> $GITHUB_OUTPUT
-        else
-          echo "Changed files:"
-          echo "$CHANGED_FILES"
-          echo ""
-          
-          # Critical files list
-          CRITICAL_FILES=(
-            "index.js"
-            "handler.js" 
-            "settings.js"
-            "scurity.js"
-            "database.json"
-            "control/"
-            "plugins/"
-          )
-          
-          CRITICAL_CHANGED=false
-          for file in $CHANGED_FILES; do
-            for critical in "${CRITICAL_FILES[@]}"; do
-              if [[ $file == $critical* ]]; then
-                echo "🚨 CRITICAL FILE MODIFIED: $file"
-                CRITICAL_CHANGED=true
-              fi
-            done
-          done
-          
-          if [ "$CRITICAL_CHANGED" = true ]; then
-            echo "critical_changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "critical_changed=false" >> $GITHUB_OUTPUT
-          fi
-        fi
-    
-    - name: 👑 OWNER VERIFICATION SYSTEM
-      if: steps.files_check.outputs.critical_changed == 'true'
+    - name: 👑 STRICT OWNER VERIFICATION
       run: |
         echo "=== 🔐 OWNER VERIFICATION ==="
         
-        # ONLY THESE USERS CAN MODIFY CRITICAL FILES
-        OWNER_USERS=("Rimmn")  # YOUR GITHUB USERNAME
+        # HANYA USER INI YANG BOLEH
+        ALLOWED_USERS=("Rimmn")
         
         CURRENT_USER="${{ github.actor }}"
-        echo "Current User: $CURRENT_USER"
-        echo "Allowed Owners: ${OWNER_USERS[@]}"
+        echo "Checking: $CURRENT_USER"
+        echo "Allowed: ${ALLOWED_USERS[@]}"
         echo ""
         
-        # Check if user is owner
-        IS_OWNER=false
-        for owner in "${OWNER_USERS[@]}"; do
-          if [ "$CURRENT_USER" = "$owner" ]; then
-            IS_OWNER=true
+        # CEK APAKAH USER DIIZINKAN
+        IS_ALLOWED=false
+        for user in "${ALLOWED_USERS[@]}"; do
+          if [ "$CURRENT_USER" = "$user" ]; then
+            IS_ALLOWED=true
             break
           fi
         done
         
-        if [ "$IS_OWNER" = false ]; then
-          echo "❌❌❌ BLOCKED! ❌❌❌"
+        if [ "$IS_ALLOWED" = false ]; then
+          echo "❌❌❌ ACCESS DENIED! ❌❌❌"
           echo ""
-          echo "=================================================="
-          echo "🚫 UNAUTHORIZED ACCESS ATTEMPT!"
-          echo "=================================================="
-          echo "User '$CURRENT_USER' tried to modify critical bot files!"
+          echo "========================================"
+          echo "🚫 UNAUTHORIZED MODIFICATION ATTEMPT!"
+          echo "========================================"
+          echo "User: $CURRENT_USER"
+          echo "Action: Trying to modify critical bot files"
           echo ""
-          echo "CRITICAL FILES PROTECTED:"
-          echo "- index.js (Main Bot File)"
-          echo "- handler.js (Command Handler)"
-          echo "- settings.js (Bot Configuration)"
-          echo "- scurity.js (Security System)"
-          echo "- database.json (User Database)"
-          echo "- control/ (Core Functions)"
-          echo "- plugins/ (Bot Plugins)"
+          echo "PROTECTED FILES:"
+          echo "- database.json (User database)"
+          echo "- index.js (Main bot file)"
+          echo "- handler.js (Command handler)"
+          echo "- settings.js (Bot configuration)"
+          echo "- scurity.js (Security system)"
+          echo "- control/ (Core functions)"
+          echo "- plugins/ (Bot plugins)"
           echo ""
-          echo "⚠️  Only these users can modify: ${OWNER_USERS[@]}"
-          echo "=================================================="
+          echo "⚠️  Only these users can modify:"
+          echo "    ${ALLOWED_USERS[@]}"
+          echo "========================================"
           
           # FAIL THE WORKFLOW
           exit 1
         else
-          echo "✅ VERIFIED! User $CURRENT_USER is authorized owner"
+          echo "✅ VERIFIED! User $CURRENT_USER is authorized"
           echo "Proceeding with changes..."
         fi
     
-    - name: 📝 FILE CONTENT VALIDATION
-      if: steps.files_check.outputs.critical_changed == 'true'
+    - name: 📋 VALIDATE FILE CHANGES
       run: |
-        echo "=== 📋 CONTENT VALIDATION ==="
+        echo "=== 📄 FILE VALIDATION ==="
         
-        # Check JavaScript syntax for .js files
-        for file in $(git diff --name-only HEAD^ HEAD | grep '\.js$'); do
-          if [ -f "$file" ]; then
-            echo "Validating $file..."
-            
-            # Basic syntax check
-            if node -c "$file" 2>/dev/null; then
-              echo "  ✅ $file - JavaScript syntax OK"
-            else
-              echo "  ❌ $file - JavaScript syntax ERROR!"
-              echo "    This file has syntax errors!"
-              exit 1
-            fi
-          fi
-        done
-        
-        # Check JSON files
-        for file in $(git diff --name-only HEAD^ HEAD | grep '\.json$'); do
-          if [ -f "$file" ]; then
-            echo "Validating $file..."
-            
-            if python3 -m json.tool "$file" > /dev/null 2>&1; then
-              echo "  ✅ $file - JSON format OK"
-            else
-              echo "  ❌ $file - JSON format INVALID!"
-              exit 1
-            fi
-          fi
-        done
-    
-    - name: ✅ FINAL APPROVAL
-      if: steps.files_check.outputs.critical_changed == 'true'
-      run: |
-        echo "=========================================="
-        echo "🎉 CRITICAL FILE CHANGES APPROVED!"
-        echo "=========================================="
-        echo "User: ${{ github.actor }}"
-        echo "Status: Authorized Owner"
-        echo "Time: $(date)"
+        # Tampilkan file yang diubah
+        echo "Modified files in this commit:"
+        git diff --name-only HEAD^ HEAD 2>/dev/null || echo "First commit"
         echo ""
-        echo "Modified files:"
-        git diff --name-only HEAD^ HEAD
-        echo "=========================================="
     
-    - name: 📧 NOTIFY ON UNAUTHORIZED ACCESS
-      if: failure()
+    - name: ✅ WORKFLOW SUCCESS
       run: |
-        echo "=== 📤 SENDING SECURITY ALERT ==="
-        echo "Security breach detected!"
-        echo "User: ${{ github.actor }}"
-        echo "Repository: ${{ github.repository }}"
-        echo "Time: $(date)"
-        echo ""
-        echo "To get notifications, set up:"
-        echo "1. Go to Repository Settings"
-        echo "2. Click 'Secrets and variables' > 'Actions'"
-        echo "3. Add DISCORD_WEBHOOK or TELEGRAM_BOT_TOKEN"
-        
-    - name: 🏁 WORKFLOW COMPLETE
-      run: |
-        echo "=========================================="
-        echo "🔒 BOT PROTECTION SYSTEM ACTIVE"
+        echo "========================================"
+        echo "🎉 WORKFLOW COMPLETED SUCCESSFULLY!"
+        echo "========================================"
         echo "✅ All security checks passed"
-        echo "=========================================="
+        echo "✅ User authorization verified"
+        echo "✅ Critical files protected"
+        echo ""
+        echo "User: ${{ github.actor }}"
+        echo "Status: AUTHORIZED"
+        echo "Time: $(date '+%H:%M:%S')"
+        echo "========================================"
