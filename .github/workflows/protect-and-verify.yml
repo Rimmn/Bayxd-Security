@@ -1,159 +1,61 @@
-name: Protect & Verify Protected Files
+name: 🔒 PROTECT CRITICAL FILES
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    types: [opened, synchronize, reopened]
-
-permissions:
-  contents: read
-  issues: write
+    branches: [main]
+    paths:
+      - 'index.js'
+      - 'scurity.js'
+      - 'handler.js'
+      - 'settings.js'
+      - 'database.json'
 
 jobs:
-  verify-protected:
+  verify:
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout full history
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Read config and lists
-        id: prep
-        run: |
-          if [ -f .github/protected-files.txt ]; then
-            PROTECTED=$(sed '/^\s*#/d' .github/protected-files.txt | sed '/^\s*$/d' | tr '\n' ' ')
-          else
-            PROTECTED=""
-          fi
-          echo "protected=${PROTECTED}" >> $GITHUB_OUTPUT
-
-          if [ -n "${{ secrets.ALLOWED_AUTHORS }}" ]; then
-            echo "allowed=${{ secrets.ALLOWED_AUTHORS }}" >> $GITHUB_OUTPUT
-          elif [ -f .github/allowed-authors.txt ]; then
-            AL=$(sed '/^\s*#/d' .github/allowed-authors.txt | sed '/^\s*$/d' | paste -sd, -)
-            echo "allowed=${AL}" >> $GITHUB_OUTPUT
-          else
-            echo "allowed=" >> $GITHUB_OUTPUT
-          fi
-
-          REQ="${{ secrets.REQUIRE_SIGNED_COMMITS }}"
-          if [ -z "$REQ" ]; then REQ="false"; fi
-          echo "require_signed=${REQ}" >> $GITHUB_OUTPUT
-
-      - name: Determine commit range
-        id: range
-        run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            RANGE="${{ github.event.before }}..${{ github.sha }}"
-          else
-            RANGE="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
-          fi
-          echo "range=$RANGE" >> $GITHUB_OUTPUT
-
-      - name: Check protected file changes and commit authors
-        env:
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-
-          PROTECTED="${{ steps.prep.outputs.protected }}"
-          ALLOWED_RAW="${{ steps.prep.outputs.allowed }}"
-          REQUIRE_SIGNED="${{ steps.prep.outputs.require_signed }}"
-          RANGE="${{ steps.range.outputs.range }}"
-
-          if [ -z "$PROTECTED" ]; then
-            echo "No protected files configured. Exiting."
-            exit 0
-          fi
-
-          echo "Protected patterns: $PROTECTED"
-          echo "Allowed authors (raw): $ALLOWED_RAW"
-          echo "Require signed commits: $REQUIRE_SIGNED"
-          echo "Commit range: $RANGE"
-
-          IFS=',' read -r -a ALLOWED <<< "$ALLOWED_RAW"
-
-          CHANGED=$(git diff --name-only $RANGE || true)
-          if [ -z "$CHANGED" ]; then
-            echo "No changed files in range."
-            exit 0
-          fi
-
-          echo "Changed files:"
-          echo "$CHANGED"
-
-          UNWANTED_CHANGES=""
-          for p in $PROTECTED; do
-            if echo "$CHANGED" | grep -Fqx "$p"; then
-              UNWANTED_CHANGES="$UNWANTED_CHANGES"$'\n'"$p"
-            fi
-          done
-
-          if [ -z "$UNWANTED_CHANGES" ]; then
-            echo "No protected files modified in this push/PR."
-            exit 0
-          fi
-
-          echo "Protected files modified:"
-          echo "$UNWANTED_CHANGES"
-
-          BAD_COMMITS=""
-          COMMITS=$(git rev-list $RANGE || true)
-          for c in $COMMITS; do
-            FILES_IN_COMMIT=$(git diff-tree --no-commit-id --name-only -r $c || true)
-            touches=0
-            for pf in $PROTECTED; do
-              if echo "$FILES_IN_COMMIT" | grep -Fqx "$pf"; then
-                touches=1
-                break
-              fi
-            done
-            if [ $touches -eq 0 ]; then
-              continue
-            fi
-
-            AUTHOR_EMAIL=$(git show -s --format='%ae' $c)
-            SIG_STATUS=$(git show -s --format='%G?' $c)
-
-            ALLOWED_OK=0
-            for a in "${ALLOWED[@]}"; do
-              if [ -z "$a" ]; then continue; fi
-              if [ "$AUTHOR_EMAIL" = "$a" ]; then
-                ALLOWED_OK=1
-                break
-              fi
-            done
-
-            SIGNED_OK=1
-            if [ "$REQUIRE_SIGNED" = "true" ] || [ "$REQUIRE_SIGNED" = "True" ]; then
-              if [ "$SIG_STATUS" != "G" ]; then
-                SIGNED_OK=0
-              fi
-            fi
-
-            if [ $ALLOWED_OK -eq 0 ] || [ $SIGNED_OK -eq 0 ]; then
-              BAD_COMMITS="$BAD_COMMITS"$'\n'"Commit: $c | Author: $AUTHOR_EMAIL | Sig: $SIG_STATUS"$'\n'"Files: $FILES_IN_COMMIT"$'\n'
-            fi
-          done
-
-          if [ -n "$BAD_COMMITS" ]; then
-            echo "Unauthorized changes detected:"
-            echo "$BAD_COMMITS"
-
-            ISSUE_TITLE="⚠️ Unauthorized edit detected on protected file(s)"
-            ISSUE_BODY="Repository: \`$GITHUB_REPOSITORY\`\n\nProtected files changed:\n\`\`\`\n$UNWANTED_CHANGES\n\`\`\`\n\nDetails of offending commits:\n\`\`\`\n$BAD_COMMITS\n\`\`\`\n\nRecommended actions:\n- Revert the commits if they are malicious.\n- Verify the committer's identity and rotate any leaked secrets.\n\nThis issue was created automatically by the Protect & Verify workflow."
-
-            python - <<PY | curl -s -X POST -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$GITHUB_REPOSITORY/issues" -d @-
-import os, json
-payload = {"title": os.environ["ISSUE_TITLE"], "body": os.environ["ISSUE_BODY"]}
-print(json.dumps(payload))
-PY
-            echo "::error file=protected-files::Unauthorized edits detected. Issue created."
-            exit 1
-          else
-            echo "All commits touching protected files are authorized."
-            exit 0
-          fi
+    - name: 📋 Check Changed Files
+      run: |
+        echo "=== PROTECTION SYSTEM ==="
+        echo "User: ${{ github.actor }}"
+        echo "Event: ${{ github.event_name }}"
+        echo ""
+        
+        # List files in repo (debug)
+        echo "Files in repository:"
+        find . -type f -name "*.js" -o -name "*.json" | head -20
+        
+    - name: 🔐 Owner Verification
+      run: |
+        ALLOWED="Rimmn"
+        CURRENT="${{ github.actor }}"
+        
+        echo "Checking: $CURRENT"
+        echo "Allowed: $ALLOWED"
+        echo ""
+        
+        if [ "$CURRENT" != "$ALLOWED" ]; then
+          echo "❌ ERROR: User '$CURRENT' not authorized!"
+          echo "Only '$ALLOWED' can modify critical files."
+          echo ""
+          echo "Protected files:"
+          echo "- index.js"
+          echo "- scurity.js"
+          echo "- handler.js"
+          echo "- settings.js"
+          echo "- database.json"
+          exit 1
+        fi
+        
+        echo "✅ Authorized user: $CURRENT"
+        
+    - name: ✅ Success
+      run: |
+        echo "================================="
+        echo "🎉 PROTECTION CHECK PASSED"
+        echo "================================="
+        echo "User: ${{ github.actor }}"
+        echo "Status: VERIFIED"
+        echo "Time: $(date)"
+        echo "================================="
