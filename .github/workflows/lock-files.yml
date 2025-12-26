@@ -1,0 +1,71 @@
+name: 🛡️ LOCK BOT FILES
+
+on:
+  push:
+    branches: [main]
+    paths:
+      # SEMUA FILE YANG MAU DIPROTEKSI
+      - 'index.js'
+      - 'scurity.js'
+      - 'handler.js'
+      - 'settings.js'
+      - 'database.json'
+      - 'config.js'
+      - 'data/owner.json'
+      - 'data/sewa.json'
+
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # STEP 1: CHECKOUT
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      # STEP 2: SIMPLE VERIFICATION - HANYA RIMMN
+      - name: 🔐 Verify Owner (Simple)
+        run: |
+          echo "========================================"
+          echo "🔐 FILE PROTECTION CHECK"
+          echo "========================================"
+          echo "Checking user: ${{ github.actor }}"
+          echo ""
+          
+          # ATURAN SEDERHANA: HANYA RIMMN BOLEH
+          if [ "${{ github.actor }}" != "Rimmn" ]; then
+            echo "❌❌❌ ACCESS DENIED! ❌❌❌"
+            echo ""
+            echo "User: ${{ github.actor }}"
+            echo "Status: NOT AUTHORIZED"
+            echo ""
+            echo "📁 PROTECTED FILES:"
+            echo "1. index.js"
+            echo "2. scurity.js"
+            echo "3. handler.js"
+            echo "4. settings.js"
+            echo "5. database.json"
+            echo "6. config.js"
+            echo "7. data/owner.json"
+            echo "8. data/sewa.json"
+            echo ""
+            echo "⚠️  Hanya 'Rimmn' yang boleh edit file ini!"
+            echo "========================================"
+            exit 1
+          fi
+          
+          echo "✅ ACCESS GRANTED!"
+          echo "User: ${{ github.actor }}"
+          echo "Status: AUTHORIZED"
+          echo "========================================"
+      
+      # STEP 3: SUCCESS MESSAGE
+      - name: ✅ Success
+        run: |
+          echo "========================================"
+          echo "🎉 FILE MODIFICATION APPROVED"
+          echo "========================================"
+          echo "✅ User authorized: ${{ github.actor }}"
+          echo "✅ Files protected: 8 critical files"
+          echo "✅ Time: $(date)"
+          echo "========================================"
