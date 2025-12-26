@@ -1,1 +1,86 @@
-/*  Security GitHub   Created by Rimmn    Repository: Rimmn/Bayxd-Security*/import axios from 'axios'// === KONFIGURASI GITHUB ANDA ===global.repoOwner = 'Rimmn' // Username GitHub Andaglobal.repoName = 'Bayxd-Security' // Nama repository Andaglobal.repoToken = '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' // Token baru Andaglobal.repoFile = 'database.json' // File database di repo// === CACHE UNTUK RESPON CEPAT ===let cacheData = nulllet lastFetch = 0const CACHE_TIME = 5000 // 5 detik cache// === AMBIL DATABASE DARI GITHUB ===export async function scurityDB(force = false) {  try {    // Jika cache masih valid, kirim data langsung    const now = Date.now()    if (!force && cacheData && (now - lastFetch < CACHE_TIME)) {      return cacheData    }    // Ambil data via GitHub API    const apiUrl = `https://api.github.com/repos/${global.repoOwner}/${global.repoName}/contents/${global.repoFile}`    const res = await axios.get(apiUrl, {      headers: {        Authorization: `token ${global.repoToken}`      }    })    const content = Buffer.from(res.data.content, 'base64').toString('utf8')    let data = JSON.parse(content)    if (!data.nomor || !Array.isArray(data.nomor)) data.nomor = []    // Simpan cache    cacheData = data    lastFetch = now    return data  } catch (e) {    console.error('❌ Gagal fetch database dari GitHub:', e.message)    return { nomor: [] }  }}// === UPDATE DATABASE KE GITHUB ===export async function upNumber(newData) {  try {    const apiUrl = `https://api.github.com/repos/${global.repoOwner}/${global.repoName}/contents/${global.repoFile}`    // Ambil SHA file lama    const { data: oldFile } = await axios.get(apiUrl, {      headers: { Authorization: `token ${global.repoToken}` }    })    const encodedContent = Buffer.from(JSON.stringify(newData, null, 2)).toString('base64')    // Update file ke GitHub    await axios.put(apiUrl, {      message: 'Update database nomor by Owner',      content: encodedContent,      sha: oldFile.sha    }, {      headers: {        Authorization: `token ${global.repoToken}`,        'Content-Type': 'application/json'      }    })    // Perbarui cache lokal    cacheData = newData    lastFetch = Date.now()    console.log('✅ Database berhasil diupdate di GitHub')  } catch (e) {    console.error('❌ Gagal update database ke GitHub:', e.message)    throw e  }}
+/*
+  Security GitHub 
+  Created by Rimmn
+  
+  Repository: Rimmn/Bayxd-Security
+*/
+
+import axios from 'axios'
+
+// === KONFIGURASI GITHUB ANDA ===
+global.repoOwner = 'Rimmn' // Username GitHub Anda
+global.repoName = 'Bayxd-Security' // Nama repository Anda
+global.repoToken = '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' // Token baru Anda
+global.repoFile = 'database.json' // File database di repo
+
+// === CACHE UNTUK RESPON CEPAT ===
+let cacheData = null
+let lastFetch = 0
+const CACHE_TIME = 5000 // 5 detik cache
+
+// === AMBIL DATABASE DARI GITHUB ===
+export async function scurityDB(force = false) {
+  try {
+    // Jika cache masih valid, kirim data langsung
+    const now = Date.now()
+    if (!force && cacheData && (now - lastFetch < CACHE_TIME)) {
+      return cacheData
+    }
+
+    // Ambil data via GitHub API
+    const apiUrl = `https://api.github.com/repos/${global.repoOwner}/${global.repoName}/contents/${global.repoFile}`
+    const res = await axios.get(apiUrl, {
+      headers: {
+        Authorization: `token ${global.repoToken}`
+      }
+    })
+
+    const content = Buffer.from(res.data.content, 'base64').toString('utf8')
+    let data = JSON.parse(content)
+
+    if (!data.nomor || !Array.isArray(data.nomor)) data.nomor = []
+
+    // Simpan cache
+    cacheData = data
+    lastFetch = now
+
+    return data
+  } catch (e) {
+    console.error('❌ Gagal fetch database dari GitHub:', e.message)
+    return { nomor: [] }
+  }
+}
+
+// === UPDATE DATABASE KE GITHUB ===
+export async function upNumber(newData) {
+  try {
+    const apiUrl = `https://api.github.com/repos/${global.repoOwner}/${global.repoName}/contents/${global.repoFile}`
+
+    // Ambil SHA file lama
+    const { data: oldFile } = await axios.get(apiUrl, {
+      headers: { Authorization: `token ${global.repoToken}` }
+    })
+
+    const encodedContent = Buffer.from(JSON.stringify(newData, null, 2)).toString('base64')
+
+    // Update file ke GitHub
+    await axios.put(apiUrl, {
+      message: 'Update database nomor by Owner',
+      content: encodedContent,
+      sha: oldFile.sha
+    }, {
+      headers: {
+        Authorization: `token ${global.repoToken}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    // Perbarui cache lokal
+    cacheData = newData
+    lastFetch = Date.now()
+    console.log('✅ Database berhasil diupdate di GitHub')
+  } catch (e) {
+    console.error('❌ Gagal update database ke GitHub:', e.message)
+    throw e
+  }
+}
