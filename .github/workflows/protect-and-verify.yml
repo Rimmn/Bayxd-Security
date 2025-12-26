@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      # FILE UTAMA BOT
       - 'index.js'
       - 'scurity.js'
       - 'handler.js'
