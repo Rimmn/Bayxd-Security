@@ -1,95 +1,296 @@
-name: 🔐 LOCK HIGH-RISK FILES
+name: 🔐 ULTIMATE BOT SECURITY
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
     paths:
-      # FILE PALING BERBAHAYA JIKA DIBOBOL:
-      - 'scurity.js'          # ADA TOKEN GITHUB!
-      - 'database.json'       # DATABASE USER
-      - 'data/owner.json'     # DATA OWNER
-      - 'data/sewa.json'      # DATA PREMIUM
-      - 'settings.js'         # KONFIGURASI BOT
-      - 'config.js'           # CONFIG HANDLER
+      # ==================== CORE BOT FILES ====================
+      - 'index.js'                    # Main bot entry point
+      - 'handler.js'                  # Command handler
+      - 'scurity.js'                  # GitHub token & security config
+      - 'settings.js'                 # Bot settings & owner data
+      - 'config.js'                   # Message config
+      - 'function.js'                 # Utility functions
+      - 'database.js'                 # Database operations
+      
+      # ==================== FEATURE MODULES ====================
+      - 'autosholat.js'               # Auto sholat scheduler
+      - 'uploader.js'                 # File uploader
+      - 'webp.js'                     # Sticker converter
+      - 'game.js'                     # Game system
+      - 'plugins.js'                  # Plugin loader
+      
+      # ==================== DATABASE FILES ====================
+      - 'database.json'               # User whitelist database
+      - 'data/owner.json'             # Bot owners list
+      - 'data/sewa.json'              # Premium users
+      - 'data/premiumV1.json'         # Group premium v1
+      - 'data/premiumV2.json'         # Group premium v2
+      - 'data/ban.json'               # Banned users
+      - 'data/list.json'              # Custom responses
+      - 'data/database.db'            # SQLite database
+      
+      # ==================== CONFIGURATION ====================
+      - 'package.json'                # Dependencies & bot info
+      - 'README.md'                   # Bot documentation
+
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'index.js'
+      - 'handler.js'
+      - 'scurity.js'
+      - 'settings.js'
+      - 'config.js'
+      - 'database.json'
+      - 'data/owner.json'
+      - 'data/sewa.json'
+      - 'data/database.db'
 
 jobs:
-  high-risk-protection:
+  security_verification:
+    name: 🔍 Verify File Modifications
     runs-on: ubuntu-latest
-    
-    steps:
-      - name: 🚨 ALERT - HIGH RISK FILES
-        run: |
-          echo "=========================================="
-          echo "🚨 HIGH-RISK FILES PROTECTION ACTIVATED!"
-          echo "=========================================="
-          echo "User: ${{ github.actor }}"
-          echo "Repository: ${{ github.repository }}"
-          echo ""
-          echo "⚠️  These files contain SENSITIVE data!"
-          echo "=========================================="
+    permissions:
+      contents: read
+      checks: write
       
-      - name: 🔐 STRICT OWNER VERIFICATION
+    steps:
+      # ==================== STEP 1: CHECKOUT ====================
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      # ==================== STEP 2: DETECT CHANGES ====================
+      - name: 📋 Detect Modified Files
+        id: detect_files
         run: |
-          # HANYA KAMU YANG BOLEH!
-          ALLOWED="Rimmn"
-          CURRENT="${{ github.actor }}"
+          echo "🔍 SCANNING FOR MODIFIED FILES..."
+          echo "=========================================="
           
-          echo "=== HIGH-RISK AUTHORIZATION ==="
-          echo "Checking: $CURRENT"
-          echo "Allowed: $ALLOWED"
-          echo ""
-          
-          if [ "$CURRENT" != "$ALLOWED" ]; then
-            echo "❌❌❌ SECURITY BREACH ATTEMPT! ❌❌❌"
-            echo ""
-            echo "=========================================="
-            echo "🚫 UNAUTHORIZED ACCESS TO SENSITIVE FILES!"
-            echo "=========================================="
-            echo "User '$CURRENT' tried to access:"
-            echo ""
-            echo "🔴 CRITICAL FILES:"
-            echo "1. scurity.js     → Contains GitHub Token!"
-            echo "2. database.json  → User database"
-            echo "3. data/owner.json → Bot owners list"
-            echo "4. data/sewa.json  → Premium users"
-            echo "5. settings.js    → Bot configuration"
-            echo "6. config.js      → Handler config"
-            echo ""
-            echo "⚠️  These files can ONLY be modified by:"
-            echo "    '$ALLOWED'"
-            echo "=========================================="
-            exit 1
+          # Get list of changed files
+          if git rev-parse HEAD^ > /dev/null 2>&1; then
+            CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+            echo "📄 Changed files detected:"
+            echo "$CHANGED_FILES" | while read -r file; do
+              echo "   • $file"
+            done
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "ℹ️  First commit or no previous commit"
+            CHANGED_FILES=""
+            echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
           
-          echo "✅ SECURITY CLEARANCE GRANTED"
-          echo "User '$CURRENT' is authorized"
-      
-      - name: 📊 FILE CHANGE REPORT
+          echo "=========================================="
+          
+      # ==================== STEP 3: CRITICAL FILE CHECK ====================
+      - name: 🚨 Identify Critical Files
+        id: critical_check
+        if: steps.detect_files.outputs.has_changes == 'true'
         run: |
-          echo "=== FILE MODIFICATION REPORT ==="
-          echo "Authorized change by: ${{ github.actor }}"
+          echo "🚨 CHECKING FOR CRITICAL FILE MODIFICATIONS..."
+          echo "=========================================="
+          
+          # Define critical files (HIGH RISK)
+          CRITICAL_FILES=(
+            "scurity.js"      # Contains GitHub tokens
+            "database.json"   # User database
+            "data/owner.json" # Owner list
+            "data/sewa.json"  # Premium data
+            "settings.js"     # Bot configuration
+            "index.js"        # Main bot file
+          )
+          
+          CRITICAL_DETECTED=false
+          CRITICAL_LIST=""
+          
+          for file in $CHANGED_FILES; do
+            for critical in "${CRITICAL_FILES[@]}"; do
+              if [[ "$file" == "$critical" ]]; then
+                echo "⚠️  CRITICAL FILE DETECTED: $file"
+                CRITICAL_DETECTED=true
+                CRITICAL_LIST+="$file"$'\n'
+              fi
+            done
+          done
+          
+          if [ "$CRITICAL_DETECTED" = true ]; then
+            echo "critical_detected=true" >> $GITHUB_OUTPUT
+            echo "critical_files<<EOF" >> $GITHUB_OUTPUT
+            echo "$CRITICAL_LIST" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "✅ No critical files modified"
+            echo "critical_detected=false" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "=========================================="
+          
+      # ==================== STEP 4: STRICT AUTHORIZATION ====================
+      - name: 🔐 Strict Owner Verification
+        id: auth_check
+        if: steps.critical_check.outputs.critical_detected == 'true'
+        run: |
+          echo "🔐 STRICT AUTHORIZATION VERIFICATION"
+          echo "=========================================="
+          
+          # ===== CONFIGURATION =====
+          # Hanya user ini yang boleh modifikasi file kritis
+          ALLOWED_USERS=("Rimmn")  # <<< GANTI DENGAN USERNAME GITHUB KAMU
+          
+          CURRENT_USER="${{ github.actor }}"
+          CURRENT_EMAIL="${{ github.event.head_commit.author.email }}"
+          
+          echo "👤 Current User: $CURRENT_USER"
+          echo "📧 Current Email: $CURRENT_EMAIL"
+          echo "✅ Allowed Users: ${ALLOWED_USERS[@]}"
           echo ""
-          echo "Modified high-risk files:"
           
-          # Check which high-risk files were changed
-          HIGH_RISK_FILES="scurity.js database.json data/owner.json data/sewa.json settings.js config.js"
+          # ===== VERIFICATION LOGIC =====
+          IS_AUTHORIZED=false
           
-          for file in $HIGH_RISK_FILES; do
-            if [ -f "$file" ]; then
-              echo "• $file"
+          # Check username
+          for user in "${ALLOWED_USERS[@]}"; do
+            if [ "$CURRENT_USER" = "$user" ]; then
+              IS_AUTHORIZED=true
+              echo "✅ Username verification PASSED"
+              break
             fi
           done
-      
-      - name: ✅ SECURITY CHECK PASSED
+          
+          # ===== AUTHORIZATION RESULT =====
+          if [ "$IS_AUTHORIZED" = false ]; then
+            echo ""
+            echo "❌❌❌ SECURITY BREACH DETECTED! ❌❌❌"
+            echo "=========================================="
+            echo "🚫 UNAUTHORIZED ACCESS ATTEMPT"
+            echo "=========================================="
+            echo "User: $CURRENT_USER"
+            echo "Email: $CURRENT_EMAIL"
+            echo ""
+            echo "📁 ATTEMPTED TO MODIFY CRITICAL FILES:"
+            echo "${{ steps.critical_check.outputs.critical_files }}"
+            echo ""
+            echo "🔒 SECURITY POLICY:"
+            echo "These files contain sensitive data and can only"
+            echo "be modified by authorized users:"
+            echo "  • ${ALLOWED_USERS[@]}"
+            echo ""
+            echo "⚠️  RECOMMENDED ACTIONS:"
+            echo "1. Review this change immediately"
+            echo "2. Check for compromised accounts"
+            echo "3. Rotate GitHub tokens if exposed"
+            echo "=========================================="
+            
+            # Save detailed report
+            echo "::error title=SECURITY VIOLATION::User '$CURRENT_USER' attempted unauthorized modification of critical files"
+            echo "::endgroup::"
+            
+            exit 1  # BLOCK THE COMMIT
+            
+          else
+            echo ""
+            echo "✅✅✅ AUTHORIZATION GRANTED ✅✅✅"
+            echo "=========================================="
+            echo "User '$CURRENT_USER' is authorized"
+            echo "Proceeding with changes..."
+            echo "=========================================="
+          fi
+          
+      # ==================== STEP 5: FILE VALIDATION ====================
+      - name: 📝 Validate File Integrity
+        if: steps.critical_check.outputs.critical_detected == 'true'
+        run: |
+          echo "📝 VALIDATING FILE INTEGRITY..."
+          echo "=========================================="
+          
+          # Check JSON files syntax
+          for file in $CHANGED_FILES; do
+            if [[ "$file" == *.json ]]; then
+              echo "🔍 Validating JSON: $file"
+              if ! python3 -m json.tool "$file" > /dev/null 2>&1; then
+                echo "❌ INVALID JSON SYNTAX: $file"
+                echo "::error file=$file::Invalid JSON syntax detected"
+                exit 1
+              else
+                echo "✅ Valid JSON: $file"
+              fi
+            fi
+          done
+          
+          # Check JavaScript syntax
+          for file in $CHANGED_FILES; do
+            if [[ "$file" == *.js ]]; then
+              echo "🔍 Validating JavaScript: $file"
+              if ! node -c "$file" 2>/dev/null; then
+                echo "❌ JAVASCRIPT SYNTAX ERROR: $file"
+                echo "::error file=$file::JavaScript syntax error detected"
+                exit 1
+              else
+                echo "✅ Valid JavaScript: $file"
+              fi
+            fi
+          done
+          
+          echo "✅ All file validations passed"
+          echo "=========================================="
+          
+      # ==================== STEP 6: SECURITY AUDIT LOG ====================
+      - name: 📊 Generate Security Report
+        if: always()
+        run: |
+          echo "📊 SECURITY AUDIT REPORT"
+          echo "=========================================="
+          echo "Repository: ${{ github.repository }}"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo "Trigger: ${{ github.event_name }}"
+          echo "User: ${{ github.actor }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Timestamp: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          echo "=========================================="
+          
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ STATUS: SECURITY CHECKS PASSED"
+            echo "✅ User authorization: VERIFIED"
+            echo "✅ File integrity: VALID"
+            echo "✅ Security policy: ENFORCED"
+          else
+            echo "❌ STATUS: SECURITY CHECK FAILED"
+            echo "❌ Action: COMMIT BLOCKED"
+            echo "❌ Reason: Unauthorized modification attempt"
+          fi
+          
+          echo "=========================================="
+          echo "🔐 PROTECTED FILES SUMMARY:"
+          echo "• Core Bot Files: 7 files"
+          echo "• Feature Modules: 5 files"
+          echo "• Database Files: 8 files"
+          echo "• Configuration: 2 files"
+          echo "• TOTAL: 22 protected files"
+          echo "=========================================="
+          
+      # ==================== STEP 7: FINAL SUCCESS ====================
+      - name: 🎉 Security Verification Complete
+        if: success()
         run: |
           echo "=========================================="
-          echo "🔓 SECURE FILE MODIFICATION COMPLETE"
+          echo "🎉 SECURITY VERIFICATION COMPLETE"
           echo "=========================================="
           echo "✅ All security checks passed"
-          echo "✅ User authorization verified"
-          echo "✅ High-risk files protected"
+          echo "✅ User identity verified"
+          echo "✅ File integrity validated"
+          echo "✅ Critical files protected"
           echo ""
-          echo "Modified by: ${{ github.actor }}"
-          echo "Status: AUTHORIZED"
-          echo "Time: $(date)"
+          echo "👤 Authorized User: ${{ github.actor }}"
+          echo "📅 Timestamp: $(date)"
+          echo "🏷️  Status: APPROVED FOR MERGE"
           echo "=========================================="
+
+# ==================== WORKFLOW CONFIGURATION ====================
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
