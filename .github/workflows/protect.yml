@@ -1,23 +1,59 @@
-name: 🔒 Protect Bot Files
+name: 🔒 Protect Specific Files
 
 on:
   push:
     branches: [main]
-    # HAPUS "paths:" atau biarkan kosong untuk semua file
-    # paths: []  ← HAPUS INI atau COMMENT
+    paths:
+      # FILE YANG MAU DIPROTEKSI:
+      - 'handler.js'
+      - 'scurity.js'
+      - 'index.js'
+      - 'database.js'
+      - 'settings.js'
+      - 'config.js'
+      - 'database.json'
+      - 'data/owner.json'
 
 jobs:
-  check:
+  protect:
     runs-on: ubuntu-latest
+    
     steps:
-      - name: 🔐 Simple Check
+      - name: 🔍 Check Modified Files
         run: |
+          echo "=== FILE PROTECTION CHECK ==="
           echo "User: ${{ github.actor }}"
+          echo "Event: ${{ github.event_name }}"
+          echo ""
           
+      - name: 🔐 Verify Owner
+        run: |
           # HANYA RIMMN YANG BOLEH
           if [ "${{ github.actor }}" != "Rimmn" ]; then
-            echo "❌ ERROR: Only Rimmn can modify files!"
+            echo "❌ ERROR: User '${{ github.actor }}' not authorized!"
+            echo ""
+            echo "📋 PROTECTED FILES LIST:"
+            echo "1. handler.js"
+            echo "2. scurity.js"
+            echo "3. index.js"
+            echo "4. database.js"
+            echo "5. settings.js"
+            echo "6. config.js"
+            echo "7. database.json"
+            echo "8. data/owner.json"
+            echo ""
+            echo "⚠️  Only 'Rimmn' can modify these files!"
             exit 1
           fi
           
-          echo "✅ OK: Rimmn is authorized"
+          echo "✅ AUTHORIZED: User '${{ github.actor }}' is Rimmn"
+      
+      - name: ✅ Success
+        run: |
+          echo "================================="
+          echo "🎉 FILE MODIFICATION APPROVED"
+          echo "================================="
+          echo "User: ${{ github.actor }}"
+          echo "Status: VERIFIED OWNER"
+          echo "Protected files: 8 files"
+          echo "================================="
