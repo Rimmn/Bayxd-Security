@@ -1,0 +1,28 @@
+name: 🔒 Simple Protection
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'database.json'
+      - 'index.js'
+      - 'scurity.js'
+      - 'handler.js'
+      - 'settings.js'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check User
+        run: |
+          echo "=== SIMPLE PROTECTION ==="
+          echo "User: ${{ github.actor }}"
+          
+          # HANYA RIMMN YANG BOLEH
+          if [ "${{ github.actor }}" != "Rimmn" ]; then
+            echo "❌ ERROR: Not Rimmn!"
+            exit 1
+          fi
+          
+          echo "✅ OK: User is Rimmn"
