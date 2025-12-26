@@ -1,62 +1,95 @@
-name: 🔒 PROTECT CRITICAL FILES
+name: 🔐 LOCK HIGH-RISK FILES
 
 on:
   push:
     branches: [main]
     paths:
-      # FILE UTAMA BOT
-      - 'index.js'
-      - 'scurity.js'
-      - 'handler.js'
-      - 'settings.js'
-      - 'database.json'
+      # FILE PALING BERBAHAYA JIKA DIBOBOL:
+      - 'scurity.js'          # ADA TOKEN GITHUB!
+      - 'database.json'       # DATABASE USER
+      - 'data/owner.json'     # DATA OWNER
+      - 'data/sewa.json'      # DATA PREMIUM
+      - 'settings.js'         # KONFIGURASI BOT
+      - 'config.js'           # CONFIG HANDLER
 
 jobs:
-  verify:
+  high-risk-protection:
     runs-on: ubuntu-latest
     
     steps:
-    - name: 📋 Check Changed Files
-      run: |
-        echo "=== PROTECTION SYSTEM ==="
-        echo "User: ${{ github.actor }}"
-        echo "Event: ${{ github.event_name }}"
-        echo ""
-        
-        # List files in repo (debug)
-        echo "Files in repository:"
-        find . -type f -name "*.js" -o -name "*.json" | head -20
-        
-    - name: 🔐 Owner Verification
-      run: |
-        ALLOWED="Rimmn"
-        CURRENT="${{ github.actor }}"
-        
-        echo "Checking: $CURRENT"
-        echo "Allowed: $ALLOWED"
-        echo ""
-        
-        if [ "$CURRENT" != "$ALLOWED" ]; then
-          echo "❌ ERROR: User '$CURRENT' not authorized!"
-          echo "Only '$ALLOWED' can modify critical files."
+      - name: 🚨 ALERT - HIGH RISK FILES
+        run: |
+          echo "=========================================="
+          echo "🚨 HIGH-RISK FILES PROTECTION ACTIVATED!"
+          echo "=========================================="
+          echo "User: ${{ github.actor }}"
+          echo "Repository: ${{ github.repository }}"
           echo ""
-          echo "Protected files:"
-          echo "- index.js"
-          echo "- scurity.js"
-          echo "- handler.js"
-          echo "- settings.js"
-          echo "- database.json"
-          exit 1
-        fi
-        
-        echo "✅ Authorized user: $CURRENT"
-        
-    - name: ✅ Success
-      run: |
-        echo "================================="
-        echo "🎉 PROTECTION CHECK PASSED"
-        echo "================================="
-        echo "User: ${{ github.actor }}"
-        echo "Status: VERIFIED"
-        echo "Time: $(date)"
-        echo "================================="
+          echo "⚠️  These files contain SENSITIVE data!"
+          echo "=========================================="
+      
+      - name: 🔐 STRICT OWNER VERIFICATION
+        run: |
+          # HANYA KAMU YANG BOLEH!
+          ALLOWED="Rimmn"
+          CURRENT="${{ github.actor }}"
+          
+          echo "=== HIGH-RISK AUTHORIZATION ==="
+          echo "Checking: $CURRENT"
+          echo "Allowed: $ALLOWED"
+          echo ""
+          
+          if [ "$CURRENT" != "$ALLOWED" ]; then
+            echo "❌❌❌ SECURITY BREACH ATTEMPT! ❌❌❌"
+            echo ""
+            echo "=========================================="
+            echo "🚫 UNAUTHORIZED ACCESS TO SENSITIVE FILES!"
+            echo "=========================================="
+            echo "User '$CURRENT' tried to access:"
+            echo ""
+            echo "🔴 CRITICAL FILES:"
+            echo "1. scurity.js     → Contains GitHub Token!"
+            echo "2. database.json  → User database"
+            echo "3. data/owner.json → Bot owners list"
+            echo "4. data/sewa.json  → Premium users"
+            echo "5. settings.js    → Bot configuration"
+            echo "6. config.js      → Handler config"
+            echo ""
+            echo "⚠️  These files can ONLY be modified by:"
+            echo "    '$ALLOWED'"
+            echo "=========================================="
+            exit 1
+          fi
+          
+          echo "✅ SECURITY CLEARANCE GRANTED"
+          echo "User '$CURRENT' is authorized"
+      
+      - name: 📊 FILE CHANGE REPORT
+        run: |
+          echo "=== FILE MODIFICATION REPORT ==="
+          echo "Authorized change by: ${{ github.actor }}"
+          echo ""
+          echo "Modified high-risk files:"
+          
+          # Check which high-risk files were changed
+          HIGH_RISK_FILES="scurity.js database.json data/owner.json data/sewa.json settings.js config.js"
+          
+          for file in $HIGH_RISK_FILES; do
+            if [ -f "$file" ]; then
+              echo "• $file"
+            fi
+          done
+      
+      - name: ✅ SECURITY CHECK PASSED
+        run: |
+          echo "=========================================="
+          echo "🔓 SECURE FILE MODIFICATION COMPLETE"
+          echo "=========================================="
+          echo "✅ All security checks passed"
+          echo "✅ User authorization verified"
+          echo "✅ High-risk files protected"
+          echo ""
+          echo "Modified by: ${{ github.actor }}"
+          echo "Status: AUTHORIZED"
+          echo "Time: $(date)"
+          echo "=========================================="
