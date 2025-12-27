@@ -14,7 +14,9 @@ on:
       - 'database.json'
       - 'data/owner.json'
       - 'src/config/env.js'
+      - 'control/security.js'
       - 'control/database.js'
+      - '.env'
 
 jobs:
   protect:
@@ -26,6 +28,7 @@ jobs:
           echo "=== FILE PROTECTION CHECK ==="
           echo "User: ${{ github.actor }}"
           echo "Event: ${{ github.event_name }}"
+          echo "Branch: ${{ github.ref }}"
           echo ""
           
       - name: 🔐 Verify Owner
@@ -34,7 +37,7 @@ jobs:
           if [ "${{ github.actor }}" != "Rimmn" ]; then
             echo "❌ ERROR: User '${{ github.actor }}' not authorized!"
             echo ""
-            echo "📋 PROTECTED FILES LIST:"
+            echo "📋 LIST FILE YANG DIPROTEKSI:"
             echo "1. handler.js"
             echo "2. scurity.js"
             echo "3. index.js"
@@ -44,20 +47,24 @@ jobs:
             echo "7. database.json"
             echo "8. data/owner.json"
             echo "9. src/config/env.js"
-            echo "10. control/database.js"
+            echo "10. control/security.js"
+            echo "11. control/database.js"
+            echo "12. .env"
             echo ""
-            echo "⚠️  Only 'Rimmn' can modify these files!"
+            echo "⚠️  Hanya 'Rimmn' yang boleh modifikasi file ini!"
+            echo "📞 Hubungi owner jika perlu perubahan."
             exit 1
           fi
           
-          echo "✅ AUTHORIZED: User '${{ github.actor }}' is Rimmn"
+          echo "✅ AUTHORIZED: User '${{ github.actor }}' adalah Rimmn"
       
       - name: ✅ Success
         run: |
-          echo "================================="
+          echo "=========================================="
           echo "🎉 FILE MODIFICATION APPROVED"
-          echo "================================="
-          echo "User: ${{ github.actor }}"
-          echo "Status: VERIFIED OWNER"
-          echo "Protected files: 11 files"
-          echo "================================="
+          echo "=========================================="
+          echo "👤 User: ${{ github.actor }}"
+          echo "📁 Status: VERIFIED OWNER"
+          echo "🔒 Protected files: 12 files"
+          echo "🕒 Time: $(date)"
+          echo "=========================================="
