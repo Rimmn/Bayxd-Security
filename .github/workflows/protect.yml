@@ -14,8 +14,7 @@ on:
       - 'database.json'
       - 'data/owner.json'
       - 'src/config/env.js'
-      - 'src/config/.env
-      - 'control/security.js'
+      - 'src/config/.env'
       - 'control/database.js'
 
 jobs:
@@ -46,9 +45,9 @@ jobs:
             echo "7. database.json"
             echo "8. data/owner.json"
             echo "9. src/config/env.js"
-            echo "10. control/security.js"
+            echo "10. src/config/.env'
             echo "11. control/database.js"
-            echo "11. src/config/.env"
+            echo ""
             echo "⚠️  Only 'Rimmn' can modify these files!"
             exit 1
           fi
