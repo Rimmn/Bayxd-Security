@@ -13,6 +13,9 @@ on:
       - 'config.js'
       - 'database.json'
       - 'data/owner.json'
+      - 'src/config/env.js'
+      - 'control/security.js'
+      - 'control/database.js'
 
 jobs:
   protect:
@@ -41,6 +44,9 @@ jobs:
             echo "6. config.js"
             echo "7. database.json"
             echo "8. data/owner.json"
+            echo "9. src/config/env.js"
+            echo "10. control/security.js"
+            echo "11. control/database.js"
             echo ""
             echo "⚠️  Only 'Rimmn' can modify these files!"
             exit 1
@@ -55,5 +61,5 @@ jobs:
           echo "================================="
           echo "User: ${{ github.actor }}"
           echo "Status: VERIFIED OWNER"
-          echo "Protected files: 8 files"
+          echo "Protected files: 11 files"
           echo "================================="
