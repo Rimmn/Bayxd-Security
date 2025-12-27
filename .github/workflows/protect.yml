@@ -14,7 +14,7 @@ on:
       - 'database.json'
       - 'data/owner.json'
       - 'src/config/env.js'
-      - 'control/security.js'
+      - 'control/scurity.js'
       - 'control/database.js'
       - '.env'
 
@@ -47,7 +47,7 @@ jobs:
             echo "7. database.json"
             echo "8. data/owner.json"
             echo "9. src/config/env.js"
-            echo "10. control/security.js"
+            echo "10. control/scurity.js"
             echo "11. control/database.js"
             echo "12. .env"
             echo ""
